@@ -17,5 +17,8 @@ courses = [Course(crn, term) for crn in crns]
 print("\n\n")
 lst = CourseList(courses)
 
-email_from
-lst.run_notifier_email()
+email_from = ""
+email_to = ""
+email_password = ""  # Not the password but the automated password, more in readme.md
+phone_number_in_email_format = ""
+lst.run_notifier_email(email_from, email_password, phone_number_in_email_format, email_to)
