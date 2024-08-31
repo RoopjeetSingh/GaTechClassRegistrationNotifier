@@ -7,15 +7,16 @@ import time
 from bs4 import BeautifulSoup
 
 
-def send_email(content, classes):
+def send_email(email_from: str, email_password: str, phone_number_as_email: str, content: str, classes: list,
+               email_to: str = ""):
     msg = EmailMessage()
     msg.set_content(content)
     msg['subject'] = "Courses Open- " + ', '.join(classes)
-    msg['to'] = "4709181624@vtext.com"
-    msg['cc'] = "roopjeetsingh2004@gmail.com"
-    user = "singhroopjeet3@gmail.com"
+    msg['to'] = phone_number_as_email
+    msg['cc'] = email_to or email_from
+    user = email_from
     msg['from'] = user
-    password = "hoalxajffnovandw"
+    password = email_password
 
     server = smtplib.SMTP("smtp.gmail.com", 587)
     server.starttls()
@@ -38,37 +39,8 @@ class Course:
                 self.name = headers[0].getText()
                 print(self.name)
 
-    def __get_prereqs(self):
-        url = 'https://oscar.gatech.edu/bprod/bwckschd.p_disp_detail_sched?term_in='
-        url += self.term + '&crn_in=' + self.crn
-
-        with requests.Session() as s:
-            with s.get(url) as page:
-                soup = BeautifulSoup(page.content, 'html.parser')
-                p = soup.find('td', class_="dddefault")
-                txt = p.getText()
-                idx = txt.index("Prerequisites:")
-                return txt[idx:len(txt) - 4]
-
-    def __is_not_fodder(self, s: str) -> bool:
-        fodder = ['undergraduate', 'graduate', 'level', 'grade', 'of', 'minimum', 'semester']
-        tmp = s.lower()
-        for fod in fodder:
-            if fod == tmp: return False
-        return True
-
-    def get_prereqs(self):
-        try:
-            raw = self.__get_prereqs()
-            block = ' '.join(list(filter(lambda el: self.__is_not_fodder(el), raw[raw.index("\n") + 3:].split())))
-            els = re.findall('\[[^\]]*\]|\([^\)]*\)|\"[^\"]*\"|\S+', block)
-            parsed = ' '.join(els).replace('(Undergraduate ', '(')
-            return parsed
-        except:
-            return "None"
-
     def has_name(self) -> bool:
-        return self.name != None
+        return self.name is not None
 
     def __get_registration_info(self, term: str):
         url = 'https://oscar.gatech.edu/bprod/bwckschd.p_disp_detail_sched?term_in='
@@ -79,7 +51,8 @@ class Course:
                 soup = BeautifulSoup(page.content, 'html.parser')
                 table = soup.find('caption', string='Registration Availability').find_parent('table')
 
-                if len(table) == 0: raise ValueError()
+                if len(table) == 0:
+                    raise ValueError()
 
                 data = [int(info.getText()) for info in table.findAll('td', class_='dddefault')]
                 return data
@@ -88,7 +61,8 @@ class Course:
         self.term = term
         data = self.__get_registration_info(term)
 
-        if len(data) < 6: raise ValueError()
+        if len(data) < 6:
+            raise ValueError()
 
         waitlist_data = {
             'seats': data[3],
@@ -131,7 +105,7 @@ class CourseList:
     def __init__(self, courses):
         self.courses = courses
 
-    def send_email_notify(self):
+    def send_email_notify(self, email_from: str, email_password: str, phone_number_as_email: str, email_to: str = ""):
         body = ""
         names = []
         courses_to_remove = []
@@ -149,11 +123,9 @@ class CourseList:
             print("\nCourses Opened: \n" + body)
             # print([course.name for course in self.courses])
 
-            # send_email(body, names)
+            send_email(email_from, email_password, phone_number_as_email, body, names, email_to)
 
-    def run_notifier_email(self):
+    def run_notifier_email(self, email_from: str, email_password: str, phone_number_as_email: str, email_to: str = ""):
         while self.courses:
-            self.send_email_notify()
-            # send_email(str(datetime.now()), [])
-            # print(datetime.now())
-            time.sleep(60)
+            self.send_email_notify(email_from, email_password, phone_number_as_email, email_to)
+            time.sleep(60)  # check every minute
