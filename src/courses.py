@@ -16,13 +16,11 @@ def send_email(email_from: str, email_password: str, content: str, classes: list
         msg['cc'] = email_to or email_from
     else:
         msg['to'] = email_to or email_from
-    user = email_from
-    msg['from'] = user
-    password = email_password
+    msg['from'] = email_from
 
     server = smtplib.SMTP("smtp.gmail.com", 587)
     server.starttls()
-    server.login(user, password)
+    server.login(email_from, email_password)
     server.send_message(msg)
 
     server.quit()

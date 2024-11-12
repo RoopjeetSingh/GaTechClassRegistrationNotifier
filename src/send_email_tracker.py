@@ -1,31 +1,27 @@
-from src.courses import CourseList
-from datetime import datetime
-
-
-season = "spring"
-now = datetime.now()
-term = ''
-
-if season.lower() == 'spring':
-    term = f'{now.year + 1}' + '02' if now.month > 4 else f'{now.year}' + '02'
-else:
-    term = f'{now.year}' + '05' if season.lower() == 'summer' else f'{now.year}' + '08'
-
-
-crns = []  # classes crn for example, ['86991', '86992', '82928', '88421']
-lst = CourseList(crns, term)
-print("\n\n")
-
-email_from = ""
-email_to = ""
-email_password = ""  # Not the password but the automated password, more in readme.md
-phone_number_in_email_format = ""
-lst.run_notifier_email(email_from, email_password, phone_number_in_email_format, email_to)
-
 import argparse
-from src.courses import CourseList
+from courses import CourseList
 from datetime import datetime
+import re
 
+def validate_crns(crns):
+    """Ensure all CRNs are 5-digit numbers."""
+    if not all(re.fullmatch(r'\d{5}', crn) for crn in crns):
+        raise argparse.ArgumentTypeError("Each CRN must be a 5-digit number.", crns)
+    return crns
+
+
+def validate_email(email):
+    """Ensure email is in valid format."""
+    email_pattern = r'^[\w\.-]+@[\w\.-]+\.\w{2,}$'
+    if email and not re.fullmatch(email_pattern, email):
+        raise argparse.ArgumentTypeError("Invalid email format.")
+    return email
+
+def validate_phone_email_format(phone_email):
+    """Ensure phone number in email format is valid."""
+    if phone_email and not validate_email(phone_email):
+        raise argparse.ArgumentTypeError("Invalid phone number email format.")
+    return phone_email
 
 def main():
     parser = argparse.ArgumentParser(description="Automate course notifications.")
@@ -45,7 +41,8 @@ def main():
                         help="Optional: Recipient email address. If none is provided, email_from is the default recipient")
 
     args = parser.parse_args()
-
+    email_password = args.email_password.replace('\xa0', ' ')
+    print(repr(args.crns), repr(args.season), repr(args.email_from), repr(email_password))
     # Determine term code based on season and current month/year
     now = datetime.now()
     if args.season.lower() == 'spring':
@@ -60,7 +57,7 @@ def main():
     print("\n\n")
 
     # Run notifier with command-line provided email details
-    lst.run_notifier_email(args.email_from, args.email_password, args.phone_number_in_email_format, args.email_to)
+    lst.run_notifier_email(args.email_from, email_password, args.phone_number_in_email_format, args.email_to)
 
 
 if __name__ == "__main__":
