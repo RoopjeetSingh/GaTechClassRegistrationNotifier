@@ -1,4 +1,3 @@
-import re
 import smtplib
 from email.message import EmailMessage
 
@@ -7,13 +6,16 @@ import time
 from bs4 import BeautifulSoup
 
 
-def send_email(email_from: str, email_password: str, phone_number_as_email: str, content: str, classes: list,
-               email_to: str = ""):
+def send_email(email_from: str, email_password: str, content: str, classes: list,
+               phone_number_as_email: str = "", email_to: str = ""):
     msg = EmailMessage()
     msg.set_content(content)
     msg['subject'] = "Courses Open- " + ', '.join(classes)
-    msg['to'] = phone_number_as_email
-    msg['cc'] = email_to or email_from
+    if phone_number_as_email:
+        msg['to'] = phone_number_as_email
+        msg['cc'] = email_to or email_from
+    else:
+        msg['to'] = email_to or email_from
     user = email_from
     msg['from'] = user
     password = email_password
@@ -102,10 +104,10 @@ class Course:
 
 
 class CourseList:
-    def __init__(self, courses):
-        self.courses = courses
+    def __init__(self, courses, term):
+        self.courses = [Course(crn, term) for crn in courses]
 
-    def send_email_notify(self, email_from: str, email_password: str, phone_number_as_email: str, email_to: str = ""):
+    def send_email_notify(self, email_from: str, email_password: str, phone_number_as_email: str = "", email_to: str = ""):
         body = ""
         names = []
         courses_to_remove = []
@@ -123,9 +125,9 @@ class CourseList:
             print("\nCourses Opened: \n" + body)
             # print([course.name for course in self.courses])
 
-            send_email(email_from, email_password, phone_number_as_email, body, names, email_to)
+            send_email(email_from, email_password, body, names, phone_number_as_email, email_to)
 
-    def run_notifier_email(self, email_from: str, email_password: str, phone_number_as_email: str, email_to: str = ""):
+    def run_notifier_email(self, email_from: str, email_password: str, phone_number_as_email: str = "", email_to: str = ""):
         while self.courses:
             self.send_email_notify(email_from, email_password, phone_number_as_email, email_to)
             time.sleep(60)  # check every minute
