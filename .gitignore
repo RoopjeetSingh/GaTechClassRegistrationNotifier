@@ -1,6 +1,6 @@
 # created by virtualenv automatically
 venv/bin
 lib
-test.py
+notifier_via_file.py
 pyvenv.cfg
 .idea/

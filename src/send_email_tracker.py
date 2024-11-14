@@ -1,6 +1,5 @@
 import argparse
 from courses import CourseList
-from datetime import datetime
 import re
 
 def validate_crns(crns):
@@ -42,18 +41,8 @@ def main():
 
     args = parser.parse_args()
     email_password = args.email_password.replace('\xa0', ' ')
-    print(repr(args.crns), repr(args.season), repr(args.email_from), repr(email_password))
-    # Determine term code based on season and current month/year
-    now = datetime.now()
-    if args.season.lower() == 'spring':
-        term = f'{now.year + 1}02' if now.month > 4 else f'{now.year}02'
-    elif args.season.lower() == 'summer':
-        term = f'{now.year}05'
-    else:
-        term = f'{now.year}08'
-
     # Create CourseList object with provided CRNs and term
-    lst = CourseList(args.crns, term)
+    lst = CourseList(args.crns, args.season.lower())
     print("\n\n")
 
     # Run notifier with command-line provided email details

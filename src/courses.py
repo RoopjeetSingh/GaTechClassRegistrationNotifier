@@ -1,5 +1,6 @@
 import smtplib
 from email.message import EmailMessage
+from datetime import datetime
 
 import requests
 import time
@@ -103,6 +104,13 @@ class Course:
 
 class CourseList:
     def __init__(self, courses, term):
+        now = datetime.now()
+        if term.lower() == 'spring':
+            term = f'{now.year + 1}02' if now.month > 4 else f'{now.year}02'
+        elif term.lower() == 'summer':
+            term = f'{now.year}05'
+        else:
+            term = f'{now.year}08'
         self.courses = [Course(crn, term) for crn in courses]
 
     def send_email_notify(self, email_from: str, email_password: str, phone_number_as_email: str = "", email_to: str = ""):
